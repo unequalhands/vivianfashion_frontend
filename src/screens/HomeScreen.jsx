@@ -6,6 +6,9 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Product from '../components/Product';
 import { Helmet } from 'react-helmet-async';
+import LoadingBox from '../components/LoadingBox';
+import MessageBox from '../components/MessageBox';
+import { getError } from '../Utils';
 
 
 const reducer = (state, action)=>{
@@ -46,7 +49,7 @@ const HomeScreen = () => {
         catch(err){
             dispatch({
                 type:'FETCH_FAIL',
-                payload:err.message
+                payload:getError(err)
             })
         }
       
@@ -63,8 +66,8 @@ const HomeScreen = () => {
       <h1>Customized cloth designs</h1>
       <div className="products">
        {
-            loading ? (<div> loading ... </div>)
-            : error ? (<div>{error}</div>)
+            loading ? (<LoadingBox/>)
+            : error ? (<MessageBox variant='danger'>{error}</MessageBox>)
              :(
                  <Row>
                     {products.map((product) => 

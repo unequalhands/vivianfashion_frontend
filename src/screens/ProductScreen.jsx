@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useEffect } from 'react';
 import { useReducer } from 'react';
 import {useParams  } from "react-router-dom";
@@ -11,6 +11,11 @@ import Rating from '../components/Rating';
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import { Helmet } from 'react-helmet-async';
+import LoadingBox from '../components/LoadingBox';
+import MessageBox from '../components/MessageBox';
+import { getError } from '../Utils';
+import { Store } from '../Store';
+import axios from 'axios';
 
 const reducer = (state, action)=>{
   switch(action.type){
@@ -52,7 +57,7 @@ useEffect(() => {
   catch(err){
       dispatch({
           type:'FETCH_FAIL',
-          payload:err.message
+          payload:getError(err)
       })
   }
 
@@ -60,11 +65,24 @@ useEffect(() => {
 };
 fetchData();
 }, [slug]);
+
+const {state, dispatch:ctxDispatch} = useContext(Store);
+const {cart} = state;
+const addToCartHandler = async()=>{
+  const existItem = cart.cartItems.find((x)=> x._id === product._id);
+  const quantity = existItem ? existItem.quantity +1 : 1;
+  const {data} = await axios.get(`/api/products/${product._id}`);
+  if(data.countInStock<quantity){
+    window.alert('sorry, Product is out of stock');
+    return;
+  }
+ctxDispatch({type:'CART_ADD_ITEM', payload:{...product, quantity}})
+}
    
   return (
    
-    loading ? <div>loading...</div>
-  :error ? <div>{error}</div>:
+    loading ? <LoadingBox/>
+  :error ? <MessageBox variant='danger'>{error}</MessageBox>:
     <div>
       <Row>
       <Col md={6}>
@@ -111,7 +129,7 @@ fetchData();
               {product.countInStock>0 && (
                 <ListGroup.Item>
                   <div className='d-grid'>
-                    <Button variant='primary'>
+                    <Button onClick = {addToCartHandler} variant='primary'>
                       Add to Cart
                     </Button>
                   </div>
